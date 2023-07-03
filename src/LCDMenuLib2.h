@@ -91,7 +91,6 @@
 
     // Include Arduino ios
     #include "Arduino.h"
-
     // Arduino specific settings
     //#if ARDUINO >= 160
     //    #define _LCDMenuLib2_arduino_version         1    // for new Arduino version like 1.6.0 and higher
@@ -181,7 +180,7 @@
 
     // Include menu class
     #include "LCDMenuLib2_typedef.h"
-    #include "LCDMenuLib2_menu.h"    
+    #include "LCDMenuLib2_menu.h"
 
     // Include macros for this lib
     #include "LCDMenuLib2_macros.h"

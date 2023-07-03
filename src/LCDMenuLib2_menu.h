@@ -57,8 +57,8 @@
     #define _LCDML_TYPE_dynParam                                            2   //0b0010// setBit 1
     #define _LCDML_TYPE_default                                             1   //0b0000// setBit 0
 
-    inline void LCDML_cb_default_function(uint8_t) { };
-    inline bool LCDML_cb_default_condetion(void) { return true; };
+    inline void LCDML_cb_default_function(uint8_t var) { };
+    inline bool LCDML_cb_default_condetion() { return 1; };
 
     class LCDMenuLib2_menu
     {
