@@ -42,7 +42,11 @@
      * Include Arduino IOS
      * ------------------
      */
+#include "main.h"
+
     #include <Arduino.h>
+
+#include <string.h>
 
     /* ------------------
      * compatible to old versions

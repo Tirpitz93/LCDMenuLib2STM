@@ -37,6 +37,7 @@
 
 #include "LCDMenuLib2.h"
 #include "LCDMenuLib2_typedef.h"
+    #include <Arduino.h>
 
 /* ******************************************************************** */
 LCDMenuLib2::LCDMenuLib2(LCDMenuLib2_menu &p_r, const uint8_t p_rows, const uint8_t p_cols, LCDML_FuncPtr contentUpdate, LCDML_FuncPtr contentClear, LCDML_FuncPtr   menuControl)
@@ -1636,10 +1637,13 @@ uint8_t LCDMenuLib2::MENU_countChilds(LCDMenuLib2_menu *menu, uint8_t all)
 
     return j;
 }
+uint8_t LCDMenuLib2::MENU_countChilds(LCDMenuLib2_menu *menu){
+	return MENU_countChilds(menu, 0);
 
+}
 
 /* ******************************************************************** */
-uint8_t LCDMenuLib2::MENU_getChilds(void)
+uint8_t LCDMenuLib2::MENU_getChilds()
 /* ******************************************************************** */
 {
     // debug information
