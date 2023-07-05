@@ -37,7 +37,7 @@
 
 #include "LCDMenuLib2_menu.h"
 #include "LCDMenuLib2_typedef.h"
-
+#include "LCDMenuLib2_macros.h"
 
 /* ******************************************************************** */
 LCDMenuLib2_menu::LCDMenuLib2_menu(uint8_t p_id, uint8_t p_param, uint8_t p_configuration, LCDML_FuncPtr_pu8 p_callback_function, LCDML_FuncPtr_rb p_callback_condition)
@@ -167,7 +167,7 @@ uint8_t LCDMenuLib2_menu::getID()
 bool LCDMenuLib2_menu::checkCondition()
 /* ******************************************************************** */
 {  
-    return bitRead(REG_control, _LCDML_REG_MENU_CONTROL_condetion);       
+    return HAL_IS_BIT_SET(REG_control, _LCDML_REG_MENU_CONTROL_condetion);
 }
 
 /* ******************************************************************** */
@@ -176,11 +176,13 @@ void LCDMenuLib2_menu::updateCondetion()
 {
     if(cb_condition() == true)
     {
-        bitSet(REG_control, _LCDML_REG_MENU_CONTROL_condetion);
+//        BITSET(REG_control, _LCDML_REG_MENU_CONTROL_condetion);
+    	REG_control^= (-1 ^ _LCDML_REG_MENU_CONTROL_condetion) & (1 << _LCDML_REG_MENU_CONTROL_condetion);
     }
     else
     {
-        bitClear(REG_control, _LCDML_REG_MENU_CONTROL_condetion);
+//        bitClear(REG_control, _LCDML_REG_MENU_CONTROL_condetion);
+    	REG_control^= (-0 ^ _LCDML_REG_MENU_CONTROL_condetion) & (1 << _LCDML_REG_MENU_CONTROL_condetion);
     }
 }
 
@@ -209,27 +211,27 @@ void LCDMenuLib2_menu::callback(uint8_t p)
 bool LCDMenuLib2_menu::checkType_menu()
 /* ******************************************************************** */
 {
-    return bitRead(REG_control, _LCDML_REG_MENU_CONTROL_type_default);    
+    return BITCHECK(REG_control, _LCDML_REG_MENU_CONTROL_type_default);
 }
 
 /* ******************************************************************** */
 bool LCDMenuLib2_menu::checkType_dynParam()
 /* ******************************************************************** */
 {
-    return bitRead(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam);    
+    return BITCHECK(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam);
 }
 
 /* ******************************************************************** */
 bool LCDMenuLib2_menu::checkType_dynParam_enabledSubMenu()
 /* ******************************************************************** */
 {
-    return bitRead(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam);    
+    return BITCHECK(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam);
 }
 
 /* ******************************************************************** */
 bool LCDMenuLib2_menu::checkType_dynParam_enabledCustomRefresh()
 /* ******************************************************************** */
 {
-    return bitRead(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam_enable_custom_refresh);    
+    return BITCHECK(REG_control, _LCDML_REG_MENU_CONTROL_type_dynParam_enable_custom_refresh);
 }   
 

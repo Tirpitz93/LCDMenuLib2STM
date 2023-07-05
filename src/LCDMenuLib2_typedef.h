@@ -37,9 +37,10 @@
 
 #ifndef _LCDML_typedef_h
     #define _LCDML_typedef_h
+#include "Arduino.h"
 
     typedef void    (* LCDML_FuncPtr)       ();
     typedef void    (* LCDML_FuncPtr_pu8)   (uint8_t);  // with parameter u8
-    typedef uint8_t    (* LCDML_FuncPtr_rb)    ();         // with return value bool
+    typedef uint8_t   (* LCDML_FuncPtr_rb)    ();         // with return value bool
 
 #endif
