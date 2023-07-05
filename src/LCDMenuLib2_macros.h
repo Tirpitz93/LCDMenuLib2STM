@@ -697,4 +697,10 @@
     #define LCDML_DISP_func_repeat_0() LCDML_DISP_0_function();
     #define LCDML_DISP_func_repeat(N) LCDML_DISP_func_repeat_ ## N ()
 
+
+#define BITSET(x,y) (x |= (1 << y))
+#define BITCLEAR(x,y) (x &= (~(1 << y)))
+#define BITTOGGLE(x,y) (x ^= (1 << y))
+#define BITCHECK(x,y) (x & (1 << y))
+
 #endif

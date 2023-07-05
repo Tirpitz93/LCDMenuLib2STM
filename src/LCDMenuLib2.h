@@ -47,7 +47,7 @@ extern "C" {
 // Include menu class
 #include "LCDMenuLib2_typedef.h"
 #include "LCDMenuLib2_menu.h"
-
+#define LCDML_DBG_UART 1
 // Include macros for this lib
 #include "LCDMenuLib2_macros.h"
 // you can change this parameters
@@ -85,6 +85,13 @@ extern char* g_LCDML_DISP_lang_lcdml_table[254];
 #define DBG_print(enable, str)                  if(enable == 1) { Serial.print(str); }
 #define DBG_println(enable, str)                if(enable == 1) { Serial.println(str); }
 #define DBG_printstrln(enable, str, val, form)  if(enable == 1) { Serial.print(str); Serial.println(val, form);}
+
+#elifdef LCDML_DBG_UART
+#define DBG_print(enable, str)                  if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000); }
+#define DBG_println(enable, str)                if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000);HAL_UART_Transmit(&huart1, "\n", 1, 1000); }
+#define DBG_printstrln(enable, str, val, form)  if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000);}
+
+
 #else
 #define DBG_print(enable, str)
 #define DBG_println(enable, str)
@@ -221,23 +228,23 @@ private:
     LCDML_FuncPtr_pu8 jT_function;                            // contains the jumpTo function
 
     // menu intern values
-    uint8_t last_element_id;                        // the id of the last element
-    uint8_t window_rows;                            // the maximum rows of the current windows  (1 is the minium)
-    uint8_t window_start;                           // the window start
+    volatile uint8_t last_element_id;                        // the id of the last element
+    volatile uint8_t window_rows;                            // the maximum rows of the current windows  (1 is the minium)
+    volatile uint8_t window_start;                           // the window start
 
-    uint8_t cursor_obj_pos;
-    uint8_t cursor_pos;                             // the current cursor position on the lcd
-    uint8_t cursor_pos_abs;
+    volatile uint8_t cursor_obj_pos;
+    volatile uint8_t cursor_pos;                             // the current cursor position on the lcd
+    volatile uint8_t cursor_pos_abs;
 
-    uint8_t layer;                                  // contains the current layer
+    volatile uint8_t layer;                                  // contains the current layer
 
     // variables with bitfields => bit register
-    uint8_t REG_control;                            // control flags
-    uint8_t REG_button;
-    uint8_t REG_MenuFunction;                       // control flags for menu functions
-    uint8_t REG_special;                            // control flags for special function like screensaver, jumpTo, setCursorTo, goRoot, ..
-    uint8_t REG_update;                             // control flags to update the content
-    uint64_t REG_custom_event;                       // control flags for custom event actions
+    volatile uint8_t REG_control;                            // control flags
+    volatile uint8_t REG_button;
+    volatile uint8_t REG_MenuFunction;                       // control flags for menu functions
+    volatile uint8_t REG_special;                            // control flags for special function like screensaver, jumpTo, setCursorTo, goRoot, ..
+    volatile uint8_t REG_update;                             // control flags to update the content
+    volatile uint64_t REG_custom_event;                       // control flags for custom event actions
 
     // variables for handling with menu function
     uint8_t goBackCnt;                              // save the layer to go back

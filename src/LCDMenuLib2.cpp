@@ -37,8 +37,10 @@
 
 #include "LCDMenuLib2.h"
 #include "LCDMenuLib2_typedef.h"
-    #include <Arduino.h>
+#include "LCDMenuLib2_macros.h"
+#include <Arduino.h>
 
+extern UART_HandleTypeDef huart1;
 /* ******************************************************************** */
 LCDMenuLib2::LCDMenuLib2(LCDMenuLib2_menu &p_r, const uint8_t p_rows, const uint8_t p_cols, LCDML_FuncPtr contentUpdate, LCDML_FuncPtr contentClear, LCDML_FuncPtr   menuControl)
 /* ******************************************************************** */
@@ -90,7 +92,7 @@ void LCDMenuLib2::init(uint8_t p_last_element_id)
     }
 
     // enable called from menu
-    bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);   
+    BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
 
     // set the cursor object position to the right postion
     // this is needed when the first and following elements are hidden
@@ -100,7 +102,7 @@ void LCDMenuLib2::init(uint8_t p_last_element_id)
     // paramter 10 => do not scroll
     MENU_doScroll(10);
     // update the menu    
-    bitSet(REG_update, _LCDML_REG_update_menu); 
+    BITSET(REG_update, _LCDML_REG_update_menu);
     DISP_menuUpdate();
 }
 
@@ -146,14 +148,14 @@ void LCDMenuLib2::loop_control(void)
     // check if a "jumpTo - setCursoTo" function is active
     // this check is necessary because there can be a bad timing between a timebased function call or a event and
     // another OTHER_...() function.
-    if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active) == false)
+    if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active) == false)
     {
         // debug information
         DBG_println(LCDML_DBG_function_name_LOOP, F("LCDML.loop_control - check screensaver"));
 
         // screensaver handling
         // check if the screensaver is enabled and a callback function is defined
-        if(bitRead(REG_special, _LCDML_REG_special_disable_screensaver) == false && cb_screensaver != NULL)
+        if(BITCHECK(REG_special, _LCDML_REG_special_disable_screensaver) == false && cb_screensaver != NULL)
         {
             // check the state when menu is active do another handling as when a function is active
             if(actMenu_id != _LCDML_NO_FUNC)
@@ -288,11 +290,11 @@ void LCDMenuLib2::loop_menu(void)
         if(actMenu_id == _LCDML_NO_FUNC) 
         {
             // -- ENTER --
-            if(bitRead(REG_button, _LCDML_REG_button_enter) == true)
+            if(BITCHECK(REG_button, _LCDML_REG_button_enter) == true)
             {
                 //menu is active
                 MENU_goInto();
-                bitSet(REG_control, _LCDML_REG_control_update_direct);
+                BITSET(REG_control, _LCDML_REG_control_update_direct);
             }
             else
             {
@@ -300,9 +302,9 @@ void LCDMenuLib2::loop_menu(void)
             }
 
             // -- UP --
-            if(bitRead(REG_special, _LCDML_REG_special_disable_scroll) == false)
+            if(BITCHECK(REG_special, _LCDML_REG_special_disable_scroll) == false)
             {
-                if(bitRead(REG_button, _LCDML_REG_button_up) == true)
+                if(BITCHECK(REG_button, _LCDML_REG_button_up) == true)
                 {  
                     MENU_doScroll(0); 
                 }
@@ -312,7 +314,7 @@ void LCDMenuLib2::loop_menu(void)
                 }
 
                 // -- DOWN --
-                if(bitRead(REG_button, _LCDML_REG_button_down) == true)
+                if(BITCHECK(REG_button, _LCDML_REG_button_down) == true)
                 {       
                     MENU_doScroll(1);                    
                 }
@@ -323,7 +325,7 @@ void LCDMenuLib2::loop_menu(void)
             }
             else
             {   
-                if(bitRead(REG_button, _LCDML_REG_button_up) == true || bitRead(REG_button, _LCDML_REG_button_down) == true)
+                if(BITCHECK(REG_button, _LCDML_REG_button_up) == true || BITCHECK(REG_button, _LCDML_REG_button_down) == true)
                 {                   
                     DISP_update();
                 }
@@ -334,7 +336,7 @@ void LCDMenuLib2::loop_menu(void)
             } 
 
             // -- LEFT or RIGHT --
-            if(bitRead(REG_button, _LCDML_REG_button_left) == true or bitRead(REG_button, _LCDML_REG_button_right) == true)
+            if(BITCHECK(REG_button, _LCDML_REG_button_left) == true or BITCHECK(REG_button, _LCDML_REG_button_right) == true)
             {
                 DISP_update();
             }
@@ -344,7 +346,7 @@ void LCDMenuLib2::loop_menu(void)
             }
 
             // -- QUIT Part 1 --
-            if(bitRead(REG_button, _LCDML_REG_button_quit) == true)
+            if(BITCHECK(REG_button, _LCDML_REG_button_quit) == true)
             {
                 MENU_enScroll();
 
@@ -366,11 +368,11 @@ void LCDMenuLib2::loop_menu(void)
         else
         {
             // -- QUIT Part 2 --
-            if(bitRead(REG_button, _LCDML_REG_button_quit) == true)
+            if(BITCHECK(REG_button, _LCDML_REG_button_quit) == true)
             {
                 MENU_enScroll();
                 FUNC_goBackToMenu();
-                bitClear(REG_button, _LCDML_REG_button_quit);
+                BITCLEAR(REG_button, _LCDML_REG_button_quit);
             }
             else
             {
@@ -391,14 +393,14 @@ void LCDMenuLib2::loop_menu(void)
     // ============================================
     // jump to handling
     // ============================================
-    if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active))
+    if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active))
     {
         // debug information
         DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_jumpTo.. / LCDML.OTHER_setCursorTo... - is active"));
 
         MENU_enScroll();
 
-        bitClear(REG_special, _LCDML_REG_special_OTHER_function_active);         
+        BITCLEAR(REG_special, _LCDML_REG_special_OTHER_function_active);
  
         // stop running function and go back to the menu
         if(actMenu_id != _LCDML_NO_FUNC)
@@ -408,9 +410,9 @@ void LCDMenuLib2::loop_menu(void)
 
             // this function called be recursive (only once)
             // set this bit to call the FUNC_close function when the goRoot function is called
-            bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_end);            
+            BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
 
-            if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active) == false)
+            if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active) == false)
             {
                 FUNC_call();    // call active function to bring it on a stable state;
             }
@@ -424,11 +426,11 @@ void LCDMenuLib2::loop_menu(void)
             // Reset active menu
             MENU_resetActiveMenu();                                                     
             
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);            
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_setup);
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_setup);
 
-            bitClear(REG_special, _LCDML_REG_special_disable_screensaver);                    
+            BITCLEAR(REG_special, _LCDML_REG_special_disable_screensaver);
         }
         else
         {
@@ -607,7 +609,7 @@ void LCDMenuLib2::loop_menu(void)
             cursor_pos_abs =  cnt;
             cursor_obj_pos =  cnt;             
             
-            if(bitRead(REG_special, _LCDML_REG_special_setCursorTo) == false)
+            if(BITCHECK(REG_special, _LCDML_REG_special_setCursorTo) == false)
             {
                 // OTHER jump to function ...
 
@@ -702,19 +704,19 @@ void LCDMenuLib2::loop_menu(void)
     if(actMenu_id != _LCDML_NO_FUNC)
     {
         // check if the running function should be closed
-        if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == false && bitRead(REG_special, _LCDML_REG_special_goRoot) == false)
+        if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == false && BITCHECK(REG_special, _LCDML_REG_special_goRoot) == false)
         {
             // => do not close the running function
             // check if a loop time was set or a button was pressed or the function is called the first time
             if( TIMER_ms(menuFunction_loopTimer, actMenu_default_time) == true || 
-                bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_setup) == false || 
+                BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_setup) == false ||
                 REG_button > 0 || 
                 CE_checkAny() > 0 ||
-                bitRead(REG_update, _LCDML_REG_update_menu_function_content)
+                BITCHECK(REG_update, _LCDML_REG_update_menu_function_content)
               )
             {
                 // reset update flag
-                bitClear(REG_update, _LCDML_REG_update_menu_function_content);
+                BITCLEAR(REG_update, _LCDML_REG_update_menu_function_content);
 
                 // call the current menu function
                 FUNC_call();                
@@ -729,9 +731,9 @@ void LCDMenuLib2::loop_menu(void)
             // close the running function 
 
             // set this bit to call the FUNC_close function when the goRoot function is called
-            bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+            BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
 
-            if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active) == false)
+            if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active) == false)
             {
                 FUNC_call();    // call active function to bring it on a stable state;
             }
@@ -746,15 +748,15 @@ void LCDMenuLib2::loop_menu(void)
             // reset the custom parameter
             jT_param    = 0;            
             
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);
-            bitClear(REG_special, _LCDML_REG_special_disable_screensaver);
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
-            bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_setup);            
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);
+            BITCLEAR(REG_special, _LCDML_REG_special_disable_screensaver);
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+            BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_setup);
 
-            if(bitRead(REG_special, _LCDML_REG_special_goRoot) == true)
+            if(BITCHECK(REG_special, _LCDML_REG_special_goRoot) == true)
             {
                 // set the cursor to the root position
-                bitClear(REG_special, _LCDML_REG_special_goRoot);
+                BITCLEAR(REG_special, _LCDML_REG_special_goRoot);
 
                 MENU_goRoot();              
             }
@@ -801,10 +803,10 @@ void LCDMenuLib2::loop_menu(void)
     // ============================================
     // check update handling
     // ============================================
-    if(bitRead(REG_update, _LCDML_REG_update_menu) == true || bitRead(REG_update, _LCDML_REG_update_cursor) == true)
+    if(BITCHECK(REG_update, _LCDML_REG_update_menu) == true || BITCHECK(REG_update, _LCDML_REG_update_cursor) == true)
     {   
         // save last cursor position
-        if(bitRead(REG_update, _LCDML_REG_update_cursor) == true)
+        if(BITCHECK(REG_update, _LCDML_REG_update_cursor) == true)
         {
             actMenu_lastCursorPositionID = actMenu_cursorPositionID;
             actMenu_cursorPositionID = curMenu->getChild(MENU_getCursorPosAbs())->getID();
@@ -812,11 +814,11 @@ void LCDMenuLib2::loop_menu(void)
 
         if(actMenu_id == _LCDML_NO_FUNC)
         {            
-            if(bitRead(REG_special, _LCDML_REG_special_disable_scroll) == false)
+            if(BITCHECK(REG_special, _LCDML_REG_special_disable_scroll) == false)
             {
                 // clear button status from scrolling
-                bitClear(REG_button, _LCDML_REG_button_up);
-                bitClear(REG_button, _LCDML_REG_button_down);
+                BITCLEAR(REG_button, _LCDML_REG_button_up);
+                BITCLEAR(REG_button, _LCDML_REG_button_down);
             }
             else
             {
@@ -860,11 +862,11 @@ void LCDMenuLib2::loop_menu(void)
 
             // this update function is neccessary for dynamic contents when a low element in the menu update the content of 
             // a higher element
-            if(bitRead(REG_update, _LCDML_REG_update_update_dyn_content) == true)
+            if(BITCHECK(REG_update, _LCDML_REG_update_update_dyn_content) == true)
             {
                 // force a rebuild of the menu output content and cursor position                
-                bitSet(REG_update, _LCDML_REG_update_menu); 
-                bitSet(REG_update, _LCDML_REG_update_cursor);
+                BITSET(REG_update, _LCDML_REG_update_menu);
+                BITSET(REG_update, _LCDML_REG_update_cursor);
 
                 // update content without button handling
                 callback_contentUpdate();  
@@ -879,8 +881,8 @@ void LCDMenuLib2::loop_menu(void)
         }       
 
         // reset both values here because it can be happen on some examples, that not all values are reset
-        bitClear(REG_update, _LCDML_REG_update_menu);
-        bitClear(REG_update, _LCDML_REG_update_cursor);
+        BITCLEAR(REG_update, _LCDML_REG_update_menu);
+        BITCLEAR(REG_update, _LCDML_REG_update_cursor);
     } 
     else
     {
@@ -940,7 +942,7 @@ void        LCDMenuLib2::MENU_goRoot(void)
 
     if(actMenu_id != _LCDML_NO_FUNC)
     {
-        bitSet(REG_special, _LCDML_REG_special_goRoot);
+        BITSET(REG_special, _LCDML_REG_special_goRoot);
     }
     else
     {
@@ -957,7 +959,7 @@ void        LCDMenuLib2::MENU_goRoot(void)
         MENU_initFirstElement();
 
         MENU_doScroll(10);
-        bitSet(REG_update, _LCDML_REG_update_menu);         
+        BITSET(REG_update, _LCDML_REG_update_menu);
     }
 }
 
@@ -1098,7 +1100,7 @@ void    LCDMenuLib2::MENU_goInto(void)
         {
             if(curMenu->getChild(cursor_obj_pos)->checkType_dynParam() == true                          // dynamic menu element
                 && curMenu->getChild(cursor_obj_pos)->checkType_dynParam_enabledSubMenu() == false      // submenus disabled
-                && bitRead(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu) == false)       // dyn sub menus general disabled
+                && BITCHECK(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu) == false)       // dyn sub menus general disabled
             {               
                 DISP_update();
             }
@@ -1253,7 +1255,9 @@ void    LCDMenuLib2::MENU_display(uint8_t update)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_display"));
     
-    bitSet(REG_update, _LCDML_REG_update_menu);      
+    BITSET(REG_update, _LCDML_REG_update_menu);
+
+
 }
 
 /* ******************************************************************** */
@@ -1338,7 +1342,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                rollover = true;            
             }
 
-            if(bitRead(REG_control, _LCDML_REG_control_rollover) && rollover == true)
+            if(BITCHECK(REG_control, _LCDML_REG_control_rollover) && rollover == true)
             {
                 // rollover the menu
                 if((tmp = curMenu->getChild(0)) != NULL)
@@ -1365,7 +1369,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                     {
                         window_start = cursor_pos_abs-(window_rows-1);
                         // update menu content when window is moved
-                        bitSet(REG_update, _LCDML_REG_update_menu);
+                        BITSET(REG_update, _LCDML_REG_update_menu);
                     }
                     else
                     {
@@ -1382,7 +1386,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                 // do nothing
             }
 
-            bitClear(REG_button, _LCDML_REG_button_up); 
+            BITCLEAR(REG_button, _LCDML_REG_button_up);
         break;
 
         case 1: // down
@@ -1420,14 +1424,14 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                 rollover = true;
             }
 
-            if(bitRead(REG_control, _LCDML_REG_control_rollover) && rollover == true)
+            if(BITCHECK(REG_control, _LCDML_REG_control_rollover) && rollover == true)
             {
                 cursor_obj_pos  = 0;
                 cursor_pos_abs  = 0;
                 window_start    = 0;
                 MENU_initFirstElement();
                 // update menu content
-                bitSet(REG_update, _LCDML_REG_update_menu);                
+                BITSET(REG_update, _LCDML_REG_update_menu);
             }
             else
             {
@@ -1435,7 +1439,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
             }            
 
             // reset the button state here and update the menu
-            bitClear(REG_button, _LCDML_REG_button_down);            
+            BITCLEAR(REG_button, _LCDML_REG_button_down);
 
         break;       
 
@@ -1459,7 +1463,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                         {
                             window_start--;
                             // update menu content when window is moved
-                            bitSet(REG_update, _LCDML_REG_update_menu);
+                            BITSET(REG_update, _LCDML_REG_update_menu);
                         }
                         else
                         {
@@ -1477,7 +1481,7 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
                     {
                         window_start = cursor_pos_abs - (window_rows-1);
                         // update menu content when window is moved
-                        bitSet(REG_update, _LCDML_REG_update_menu);                        
+                        BITSET(REG_update, _LCDML_REG_update_menu);
                     }
                     else
                     {
@@ -1505,10 +1509,10 @@ void    LCDMenuLib2::MENU_doScroll(uint8_t state)
     // check if the cursor position is updated
     if(actMenu_id == _LCDML_NO_FUNC)
     {       
-        bitSet(REG_update, _LCDML_REG_update_cursor);
-        if(bitRead(REG_update, _LCDML_REG_control_refresh_all_on_button_action) == true)
+        BITSET(REG_update, _LCDML_REG_update_cursor);
+        if(BITCHECK(REG_update, _LCDML_REG_control_refresh_all_on_button_action) == true)
         {
-            bitSet(REG_update, _LCDML_REG_update_menu);
+            BITSET(REG_update, _LCDML_REG_update_menu);
         }    
     }   
     else
@@ -1524,7 +1528,7 @@ void    LCDMenuLib2::MENU_enRollover(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_enRollover"));
 
-    bitSet(REG_control, _LCDML_REG_control_rollover);
+    BITSET(REG_control, _LCDML_REG_control_rollover);
 }
 
 /* ******************************************************************** */
@@ -1534,7 +1538,7 @@ void    LCDMenuLib2::MENU_disRollover(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_disRollover"));
 
-    bitClear(REG_control, _LCDML_REG_control_rollover);
+    BITCLEAR(REG_control, _LCDML_REG_control_rollover);
 }
 
 /* ******************************************************************** */
@@ -1544,7 +1548,7 @@ void    LCDMenuLib2::MENU_enUseDynElementsWithSubElements(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_enUseDynElementsWithSubElements"));
 
-    bitSet(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu);
+    BITSET(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu);
 }
 
 /* ******************************************************************** */
@@ -1554,7 +1558,7 @@ void    LCDMenuLib2::MENU_disUseDynElementsWithSubElements(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_disUseDynElementsWithSubElements"));
 
-    bitClear(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu);
+    BITCLEAR(REG_control, _LCDML_REG_control_en_use_dyn_elements_as_menu);
 }
 
 /* ******************************************************************** */
@@ -1691,7 +1695,7 @@ void    LCDMenuLib2::MENU_enScroll(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_enScroll"));
 
-    bitClear(REG_special, _LCDML_REG_special_disable_scroll);
+    BITCLEAR(REG_special, _LCDML_REG_special_disable_scroll);
 }
 
 /* ******************************************************************** */
@@ -1703,11 +1707,11 @@ void    LCDMenuLib2::MENU_disScroll(void)
 
     if(actMenu_id == _LCDML_NO_FUNC)
     {
-        bitSet(REG_special, _LCDML_REG_special_disable_scroll);
+        BITSET(REG_special, _LCDML_REG_special_disable_scroll);
     }
     else
     {
-        bitClear(REG_special, _LCDML_REG_special_disable_scroll);
+        BITCLEAR(REG_special, _LCDML_REG_special_disable_scroll);
     }
 }
 
@@ -1718,7 +1722,7 @@ bool LCDMenuLib2::MENU_getScrollDisableStatus(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_getScrollDisableStatus"));
 
-    return bitRead(REG_special, _LCDML_REG_special_disable_scroll);
+    return BITCHECK(REG_special, _LCDML_REG_special_disable_scroll);
 }
 
 /* ******************************************************************** */
@@ -1765,7 +1769,7 @@ void LCDMenuLib2::MENU_setDynFunctionContentUpdate(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_setMenuContentUpdate2"));
 
-    bitSet(REG_update, _LCDML_REG_update_update_dyn_content);
+    BITSET(REG_update, _LCDML_REG_update_update_dyn_content);
 }
 
 /* ******************************************************************** */
@@ -1775,7 +1779,7 @@ void LCDMenuLib2::MENU_clearDynFunctionContentUpdate(void)
      // debug information
     DBG_println(LCDML_DBG_function_name_MENU, F("LCDML.MENU_clearMenuContentUpdate2"));
 
-    bitClear(REG_update, _LCDML_REG_update_update_dyn_content);
+    BITCLEAR(REG_update, _LCDML_REG_update_update_dyn_content);
 }
 
 /* ******************************************************************** */
@@ -1898,7 +1902,7 @@ void LCDMenuLib2::MENU_enRefreshAllOnButtonAction(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.MENU_enRefreshAllOnButtonAction"));
 
-    bitSet(REG_control, _LCDML_REG_control_refresh_all_on_button_action);  
+    BITSET(REG_control, _LCDML_REG_control_refresh_all_on_button_action);
 
 }
 
@@ -1910,7 +1914,7 @@ void LCDMenuLib2::MENU_disRefreshAllOnButtonAction(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.MENU_disRefreshAllOnButtonAction"));
 
-    bitClear(REG_control, _LCDML_REG_control_refresh_all_on_button_action); 
+    BITCLEAR(REG_control, _LCDML_REG_control_refresh_all_on_button_action);
 }
 
 
@@ -1921,7 +1925,7 @@ void LCDMenuLib2::MENU_setDynRContent(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.MENU_setDynRContent"));
 
-    bitSet(REG_control, _LCDML_REG_control_content_ref_is_displayed); 
+    BITSET(REG_control, _LCDML_REG_control_content_ref_is_displayed);
 }
 
 
@@ -1932,7 +1936,7 @@ void LCDMenuLib2::MENU_clearDynRContent(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.MENU_clearDynRContent"));
 
-    bitClear(REG_control, _LCDML_REG_control_content_ref_is_displayed); 
+    BITCLEAR(REG_control, _LCDML_REG_control_content_ref_is_displayed);
 }
 
 /* ******************************************************************** */
@@ -1942,7 +1946,7 @@ bool LCDMenuLib2::MENU_checkDynRContent(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.MENU_checkDynRContent"));
 
-    return bitRead(REG_control, _LCDML_REG_control_content_ref_is_displayed); 
+    return BITCHECK(REG_control, _LCDML_REG_control_content_ref_is_displayed);
 }
 
 
@@ -1960,7 +1964,7 @@ void LCDMenuLib2::DISP_menuUpdate(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_DISP, F("LCDML.DISP_menuUpdate"));
 
-    bitSet(REG_update, _LCDML_REG_update_menu);    
+    BITSET(REG_update, _LCDML_REG_update_menu);
 }
 
 /* ******************************************************************** */
@@ -1980,9 +1984,9 @@ bool LCDMenuLib2::DISP_checkMenuUpdate(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_DISP, F("LCDML.DISP_checkMenuUpdate"));
 
-    if (bitRead(REG_update, _LCDML_REG_update_menu)) 
+    if (BITCHECK(REG_update, _LCDML_REG_update_menu))
     {
-        bitClear(REG_update, _LCDML_REG_update_menu);       
+        BITCLEAR(REG_update, _LCDML_REG_update_menu);
         return true;
     } 
     else 
@@ -1998,9 +2002,9 @@ bool LCDMenuLib2::DISP_checkMenuCursorUpdate(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_DISP, F("LCDML.DISP_checkMenuCursorUpdate"));
 
-    if(bitRead(REG_update, _LCDML_REG_update_cursor)) 
+    if(BITCHECK(REG_update, _LCDML_REG_update_cursor))
     {  
-        bitClear(REG_update, _LCDML_REG_update_cursor);       
+        BITCLEAR(REG_update, _LCDML_REG_update_cursor);
         return true;
     } 
     else 
@@ -2018,7 +2022,7 @@ void LCDMenuLib2::DISP_update(void)
 
     MENU_doScroll(10);
 
-    bitSet(REG_update, _LCDML_REG_update_menu);          
+    BITSET(REG_update, _LCDML_REG_update_menu);
 }
 
 
@@ -2108,12 +2112,12 @@ bool LCDMenuLib2::FUNC_setup(void)
     if(actMenu_id != _LCDML_NO_FUNC)
     {
         // function active
-        if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_setup) == 0) 
+        if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_setup) == 0)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_setup - check: true"));
 
-            bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_setup); // run setup
+            BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_setup); // run setup
             DISP_clear();
             REG_button = 0;
             return true;
@@ -2127,7 +2131,7 @@ bool LCDMenuLib2::FUNC_setup(void)
     }
     else
     {
-        bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_setup); // run setup
+        BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_setup); // run setup
 		
         return false;
     }
@@ -2142,7 +2146,7 @@ bool LCDMenuLib2::FUNC_loop(void)
 
     if(actMenu_id != _LCDML_NO_FUNC)
     {
-        if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == false)
+        if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == false)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_loop - check: true"));
@@ -2157,7 +2161,7 @@ bool LCDMenuLib2::FUNC_loop(void)
     }
     else
     {
-        bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+        BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
 		
         return false;
     }
@@ -2172,12 +2176,12 @@ bool LCDMenuLib2::FUNC_close(void)
 
     if(actMenu_id != _LCDML_NO_FUNC)
     {
-        if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == true)
+        if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_end) == true)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_close - check: true"));
 
-            bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);
+            BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_close_active);
             return true;
         }
         else
@@ -2189,7 +2193,7 @@ bool LCDMenuLib2::FUNC_close(void)
     }
     else
     {
-        bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+        BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
 		
         return false;
     }
@@ -2204,23 +2208,23 @@ void LCDMenuLib2::FUNC_goBackToMenu(uint8_t p_goBackCnt)
     DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_goBackToMenu"));
 
     // special handling
-    if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID) == true)
+    if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID) == true)
     {
-        bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);        
+        BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);
         OTHER_jumpToID(actMenu_lastFuncID);
     } 
     
     // special handling
-    if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID) == true)
+    if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID) == true)
     {
-        bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
+        BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
         OTHER_setCursorToID(actMenu_lastCursorPositionID);
     }        
 
     if(actMenu_id != _LCDML_NO_FUNC)
     {
         goBackCnt = p_goBackCnt;
-        bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
+        BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_end);
     }
     else
     {
@@ -2235,7 +2239,7 @@ void    LCDMenuLib2::FUNC_disableScreensaver(void)
     // debug information
     DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_disableScreensaver"));
 
-    bitSet(REG_special, _LCDML_REG_special_disable_screensaver);
+    BITSET(REG_special, _LCDML_REG_special_disable_screensaver);
 }
 
 /* ******************************************************************** */
@@ -2246,10 +2250,10 @@ void    LCDMenuLib2::FUNC_setGBAToLastCursorPos(void)
     DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_setGBAToLastCursorPos"));
 
     // delte other configurations
-    bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);
+    BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);
 
     // set new configuration
-    bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
+    BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
 }
 
 /* ******************************************************************** */
@@ -2260,10 +2264,10 @@ void    LCDMenuLib2::FUNC_setGBAToLastFunc(void)
     DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_setGBAToLastFunc"));
 
     // delete other configurations
-    bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
+    BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_setCursorToID);
 
     // set new configuration
-    bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);
+    BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_goBackToFuncID);
 }
 
 /* ******************************************************************** */
@@ -2274,7 +2278,7 @@ void    LCDMenuLib2::FUNC_setGBA(void)
     DBG_println(LCDML_DBG_function_name_FUNC, F("LCDML.FUNC_setGBA"));
 
     // decide which option is better (to function or to last cursor option)
-    if(bitRead(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu) == true)
+    if(BITCHECK(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu) == true)
     {
         FUNC_setGBAToLastCursorPos();
     }
@@ -2317,9 +2321,9 @@ bool LCDMenuLib2::BT_setup(void)
     DBG_println(LCDML_DBG_function_name_BT, F("LCDML.BT_setup"));
 
     // check if the button initialisation was done
-    if(bitRead(REG_control, _LCDML_REG_control_bt_init_setup) == false)
+    if(BITCHECK(REG_control, _LCDML_REG_control_bt_init_setup) == false)
     {
-        bitSet(REG_control, _LCDML_REG_control_bt_init_setup);
+        BITSET(REG_control, _LCDML_REG_control_bt_init_setup);
         return true;
     }
     else
@@ -2336,9 +2340,9 @@ bool LCDMenuLib2::CE_setup(void)
     DBG_println(LCDML_DBG_function_name_BT, F("LCDML.CE_setup"));
 
     // check if the button initialisation was done
-    if(bitRead(REG_control, _LCDML_REG_control_ce_init_setup) == false)
+    if(BITCHECK(REG_control, _LCDML_REG_control_ce_init_setup) == false)
     {
-        bitSet(REG_control, _LCDML_REG_control_ce_init_setup);
+        BITSET(REG_control, _LCDML_REG_control_ce_init_setup);
         return true;
     }
     else
@@ -2386,10 +2390,10 @@ void LCDMenuLib2::REG_set(uint8_t p_reg, uint8_t p_val)
     switch(p_reg)
     {
         case _LCDML_REG_CTRL__button: 
-            bitSet(REG_button, p_val); 
+            BITSET(REG_button, p_val);
             break;
         case _LCDML_REG_CTRL__events: 
-            bitSet(REG_custom_event, p_val); 
+            BITSET(REG_custom_event, p_val);
             break;
 
         default:    
@@ -2409,10 +2413,10 @@ void LCDMenuLib2::REG_reset(uint8_t p_reg, uint8_t p_val)
     switch(p_reg)
     {
         case _LCDML_REG_CTRL__button: 
-            bitClear(REG_button, p_val); 
+            BITCLEAR(REG_button, p_val);
             break;
         case _LCDML_REG_CTRL__events: 
-            bitClear(REG_custom_event, p_val); 
+            BITCLEAR(REG_custom_event, p_val);
             break;
 
         default:    
@@ -2453,10 +2457,10 @@ bool LCDMenuLib2::REG_check(uint8_t p_reg, uint8_t p_val)
     switch(p_reg)
     {
         case _LCDML_REG_CTRL__button: 
-            return bitRead(REG_button, p_val);
+            return BITCHECK(REG_button, p_val);
             break;
         case _LCDML_REG_CTRL__events: 
-            return bitRead(REG_custom_event, p_val);
+            return BITCHECK(REG_custom_event, p_val);
             break;
 
         default:
@@ -2571,7 +2575,7 @@ void LCDMenuLib2::OTHER_jumpToFunc(LCDML_FuncPtr_pu8 p_search, uint8_t p_para)
     }
     else
     {        
-        if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
+        if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
         {           
             // debug information
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_jumpToFunc - is still activ"));
@@ -2589,8 +2593,8 @@ void LCDMenuLib2::OTHER_jumpToFunc(LCDML_FuncPtr_pu8 p_search, uint8_t p_para)
                 // debug information
                 DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_jumpToFunc - start"));
 
-                bitSet(REG_special, _LCDML_REG_special_OTHER_function_active);
-                bitClear(REG_special, _LCDML_REG_special_setCursorTo); 
+                BITSET(REG_special, _LCDML_REG_special_OTHER_function_active);
+                BITCLEAR(REG_special, _LCDML_REG_special_setCursorTo);
                 MENU_clearDynRContent(); 
                 
                 // Save last active Menu ID
@@ -2600,13 +2604,13 @@ void LCDMenuLib2::OTHER_jumpToFunc(LCDML_FuncPtr_pu8 p_search, uint8_t p_para)
                 {
                     // handle parameters            
                     jT_paramOld = jT_param;
-                    bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                    BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
                 }
                 else
                 {
                     // handle parameters
                     jT_paramOld = 0;
-                    bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                    BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
 
                     // Save last cursor position
                     actMenu_lastCursorPositionID = actMenu_cursorPositionID;
@@ -2631,7 +2635,7 @@ void LCDMenuLib2::OTHER_jumpToID(uint8_t p_id, uint8_t p_para)
 
     if(p_id != _LCDML_NO_FUNC && p_id <= last_element_id)
     {
-        if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
+        if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_jumpToID - is still activ"));
@@ -2649,8 +2653,8 @@ void LCDMenuLib2::OTHER_jumpToID(uint8_t p_id, uint8_t p_para)
                 // debug information
                 DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_jumpToID - start"));
 
-                bitSet(REG_special, _LCDML_REG_special_OTHER_function_active);                
-                bitClear(REG_special, _LCDML_REG_special_setCursorTo);
+                BITSET(REG_special, _LCDML_REG_special_OTHER_function_active);
+                BITCLEAR(REG_special, _LCDML_REG_special_setCursorTo);
                 MENU_clearDynRContent();               
 
                 // Save last active Menu ID           
@@ -2660,14 +2664,14 @@ void LCDMenuLib2::OTHER_jumpToID(uint8_t p_id, uint8_t p_para)
                 {
                     // handle parameters
                     jT_paramOld = jT_param;
-                    bitClear(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                    BITCLEAR(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
                 }
                 else
                 {
                     // handle parameters
                     jT_paramOld = 0;
 
-                    bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                    BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
 
                     // Save last cursor position
                     actMenu_lastCursorPositionID = actMenu_cursorPositionID;
@@ -2702,7 +2706,7 @@ void LCDMenuLib2::OTHER_setCursorToFunc(LCDML_FuncPtr_pu8 p_search)
     }
     else
     {
-        if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
+        if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_setCursorToFunc - is still activ"));
@@ -2713,8 +2717,8 @@ void LCDMenuLib2::OTHER_setCursorToFunc(LCDML_FuncPtr_pu8 p_search)
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_setCursorToFunc - start"));
 
             // enable jump to Func
-            bitSet(REG_special, _LCDML_REG_special_OTHER_function_active);
-            bitSet(REG_special, _LCDML_REG_special_setCursorTo);
+            BITSET(REG_special, _LCDML_REG_special_OTHER_function_active);
+            BITSET(REG_special, _LCDML_REG_special_setCursorTo);
             MENU_clearDynRContent();
             jT_id       = 0;
 
@@ -2725,14 +2729,14 @@ void LCDMenuLib2::OTHER_setCursorToFunc(LCDML_FuncPtr_pu8 p_search)
             {
                 // handle parameters            
                 jT_paramOld = jT_param; 
-                bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);          
+                BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
             }
             else
             {
                 // handle parameters
                 jT_paramOld = 0;
 
-                bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
 
                 // Save last cursor position
                 actMenu_lastCursorPositionID = actMenu_cursorPositionID;
@@ -2754,7 +2758,7 @@ void LCDMenuLib2::OTHER_setCursorToID(uint8_t p_id)
 
     if(p_id != _LCDML_NO_FUNC && p_id <= last_element_id)
     {
-        if(bitRead(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
+        if(BITCHECK(REG_special, _LCDML_REG_special_OTHER_function_active) == true)
         {
             // debug information
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_setCursorToID - is still activ"));
@@ -2765,8 +2769,8 @@ void LCDMenuLib2::OTHER_setCursorToID(uint8_t p_id)
             DBG_println(LCDML_DBG_function_name_OTHER, F("LCDML.OTHER_setCursorToID - start"));
 
             // enable jump to Func
-            bitSet(REG_special, _LCDML_REG_special_OTHER_function_active);
-            bitSet(REG_special, _LCDML_REG_special_setCursorTo);
+            BITSET(REG_special, _LCDML_REG_special_OTHER_function_active);
+            BITSET(REG_special, _LCDML_REG_special_setCursorTo);
             MENU_clearDynRContent();
             jT_id       = p_id;
 
@@ -2777,14 +2781,14 @@ void LCDMenuLib2::OTHER_setCursorToID(uint8_t p_id)
             {
                 // handle paramerts
                 jT_paramOld = jT_param;
-                bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);            
+                BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
             }
             else
             {
                 // handle parameters
                 jT_paramOld = 0;
 
-                bitSet(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
+                BITSET(REG_MenuFunction, _LCDML_REG_MenuFunction_called_from_menu);
 
                 // save last cursor position
                 actMenu_lastCursorPositionID = actMenu_cursorPositionID;
@@ -2931,7 +2935,7 @@ void    LCDMenuLib2::OTHER_updateFunc(void)
 
     if(actMenu_id != _LCDML_NO_FUNC)
     {
-        bitSet(REG_update, _LCDML_REG_update_menu_function_content);
+        BITSET(REG_update, _LCDML_REG_update_menu_function_content);
     }
     else
     {
