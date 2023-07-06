@@ -65,7 +65,7 @@ extern "C" {
 #define LCDML_DBG_function_name_LOOP        0
 #define LCDML_DBG_function_name_MENU        0
 #define LCDML_DBG_function_name_FUNC        0
-#define LCDML_DBG_function_name_BT          1
+#define LCDML_DBG_function_name_BT          0
 #define LCDML_DBG_function_name_CE          0
 #define LCDML_DBG_function_name_OTHER       0
 #define LCDML_DBG_function_name_DISP        0
