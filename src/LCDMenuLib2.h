@@ -65,7 +65,7 @@ extern "C" {
 #define LCDML_DBG_function_name_LOOP        0
 #define LCDML_DBG_function_name_MENU        0
 #define LCDML_DBG_function_name_FUNC        0
-#define LCDML_DBG_function_name_BT          0
+#define LCDML_DBG_function_name_BT          1
 #define LCDML_DBG_function_name_CE          0
 #define LCDML_DBG_function_name_OTHER       0
 #define LCDML_DBG_function_name_DISP        0
@@ -83,18 +83,18 @@ extern char* g_LCDML_DISP_lang_lcdml_table[254];
 // create DBG_print makro when debugging is enabled
 #ifdef LCDML_DBG
 #define DBG_print(enable, str)                  if(enable == 1) { Serial.print(str); }
-#define DBG_println(enable, str)                if(enable == 1) { Serial.println(str); }
+#define DBG_print(enable, str)                if(enable == 1) { Serial.println(str); }
 #define DBG_printstrln(enable, str, val, form)  if(enable == 1) { Serial.print(str); Serial.println(val, form);}
-
-#elifdef LCDML_DBG_UART
-#define DBG_print(enable, str)                  if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000); }
-#define DBG_println(enable, str)                if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000);HAL_UART_Transmit(&huart1, "\n", 1, 1000); }
-#define DBG_printstrln(enable, str, val, form)  if(enable == 1) { HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), 1000);}
+#endif
+#ifdef LCDML_DBG_UART
+#define DBG_print(enable, str)                  if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*)(str), strlen(str), 1000); };
+//#define DBG_print(enable, str)                if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*) (str), strlen(str), 1000);HAL_UART_Transmit(&huart1, "\n", 1, 1000); };
+#define DBG_printstrln(enable, str, val, form)  if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*)(str), strlen(str), 1000);};
 
 
 #else
 #define DBG_print(enable, str)
-#define DBG_println(enable, str)
+#define DBG_print(enable, str)
 #define DBG_printstrln(enable, str, val, form)
 #endif
 
@@ -203,29 +203,29 @@ private:
     // object pointer
     LCDMenuLib2_menu *curMenu;                                  // currrent menu structure
 
-    // callback functions
-    LCDML_FuncPtr callback_menuControl;                   // a callback function which checks the input buttons
-    LCDML_FuncPtr callback_contentUpdate;                 // a callback function which contains the menu function content
-    LCDML_FuncPtr callback_contentClear;                  // a callback function which clears the display
-    LCDML_FuncPtr_pu8 cb_screensaver;                         // a callback function as screensaver (a normal menu function, but a defined name)
+// callback functions
+     LCDML_FuncPtr callback_menuControl;                   // a callback function which checks the input buttons
+     LCDML_FuncPtr callback_contentUpdate;                 // a callback function which contains the menu function content
+     LCDML_FuncPtr callback_contentClear;                  // a callback function which clears the display
+     LCDML_FuncPtr_pu8 cb_screensaver;                         // a callback function as screensaver (a normal menu function, but a defined name)
 
-    LCDML_FuncPtr_pu8 ce_cb[_LCDML_CE_cb_function_cnt];       // callback functions for custom events
+     LCDML_FuncPtr_pu8 ce_cb[_LCDML_CE_cb_function_cnt];       // callback functions for custom events
 
-    // activ menu values
+     // activ menu values
     LCDML_FuncPtr_pu8 actMenu_cb_function;                    // Menu Function callback
-    uint8_t actMenu_id;                             // Name of this menu
-    uint8_t actMenu_param;                          // Parameter this menu
-    uint8_t actMenu_lastFuncID;                     // History of the last three active menu functions
-    uint8_t actMenu_cursorPositionID;               // current cursor position id
-    uint8_t actMenu_lastCursorPositionID;           // Save the last Cursor position before a new function was called
-    unsigned long actMenu_default_time;                   // default loop time
-    uint64_t actMenu_ce_mask;                        // ce mask
+     uint8_t actMenu_id;                             // Name of this menu
+     uint8_t actMenu_param;                          // Parameter this menu
+     uint8_t actMenu_lastFuncID;                     // History of the last three active menu functions
+     uint8_t actMenu_cursorPositionID;               // current cursor position id
+     uint8_t actMenu_lastCursorPositionID;           // Save the last Cursor position before a new function was called
+     volatile unsigned long actMenu_default_time;                   // default loop time
+     uint64_t actMenu_ce_mask;                        // ce mask
 
     // jump To variables
-    uint8_t jT_id;                                  // contains the jumpTo id
-    uint8_t jT_param;                               // contains the jumpTo param
-    uint8_t jT_paramOld;                            // contains the jumpTo param
-    LCDML_FuncPtr_pu8 jT_function;                            // contains the jumpTo function
+    volatile uint8_t jT_id;                                  // contains the jumpTo id
+    volatile uint8_t jT_param;                               // contains the jumpTo param
+    volatile uint8_t jT_paramOld;                            // contains the jumpTo param
+    volatile LCDML_FuncPtr_pu8 jT_function;                            // contains the jumpTo function
 
     // menu intern values
     volatile uint8_t last_element_id;                        // the id of the last element
