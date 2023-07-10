@@ -47,7 +47,7 @@ extern "C" {
 // Include menu class
 #include "LCDMenuLib2_typedef.h"
 #include "LCDMenuLib2_menu.h"
-#define LCDML_DBG_UART 1
+#define LCDML_DBG_UART 0
 // Include macros for this lib
 #include "LCDMenuLib2_macros.h"
 // you can change this parameters
@@ -81,15 +81,15 @@ extern char* g_LCDML_DISP_lang_lcdml_table[254];
 #endif
 
 // create DBG_print makro when debugging is enabled
-#ifdef LCDML_DBG
+#if LCDML_DBG
 #define DBG_print(enable, str)                  if(enable == 1) { Serial.print(str); }
 #define DBG_print(enable, str)                if(enable == 1) { Serial.println(str); }
 #define DBG_printstrln(enable, str, val, form)  if(enable == 1) { Serial.print(str); Serial.println(val, form);}
 #endif
-#ifdef LCDML_DBG_UART
-#define DBG_print(enable, str)                  if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*)(str), strlen(str), 1000); };
-//#define DBG_print(enable, str)                if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*) (str), strlen(str), 1000);HAL_UART_Transmit(&huart1, "\n", 1, 1000); };
-#define DBG_printstrln(enable, str, val, form)  if((enable) == 1) { HAL_UART_Transmit(&huart1, (const uint8_t*)(str), strlen(str), 1000);};
+#if LCDML_DBG_UART
+#define DBG_print(enable, str)                  if((enable) == 1) { CDC_Transmit_FS((const uint8_t*)(str), strlen(str)); };
+//#define DBG_print(enable, str)                if((enable) == 1) { CDC_Transmit_FS((const uint8_t*) (str), strlen(str));CDC_Transmit_FS( "\n", 1 )};
+#define DBG_printstrln(enable, str, val, form)  if((enable) == 1) { CDC_Transmit_FS( (const uint8_t*)(str), strlen(str));};
 
 
 #else
